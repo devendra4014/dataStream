@@ -1,0 +1,6 @@
+.*
+**/.*
+!.gitignore
+.vscode
+.\backend\.venv
+.backend\.pytest_cache
