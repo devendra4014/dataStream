@@ -1,13 +1,18 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.utils.logger import configure_logging, get_logger
+from app.core.settings import settings
+
+# from app.schemas.connection_settings import DuckDBSettings
+from app.database.db import DuckDBClient, DuckDBSettings
 from app.middleware.logger_middleware import logging_middleware
-from app.config.settings import settings
 from app.routers import auth
-from app.models import user_model
-from app.database.duckdb_database import engine
+from app.services.auth_service import AuthService
+from app.utils.logger import configure_logging, get_logger
+
+# from app.database.duckdb_database import engine
 
 configure_logging(level=settings.log_level)
 
@@ -17,14 +22,23 @@ logger = get_logger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("app_starting")
+    db_config = DuckDBSettings(database_url=settings.db_url)
+    db = DuckDBClient(db_config)
 
-    yield  # app runs here
+    auth_service = AuthService(database=db)
 
-    logger.info("app_shutting_down")
+    app.state.database = db
+    app.state.auth_service = auth_service
 
+    yield
 
-# This creates the tables in your duckdb database
-user_model.Base.metadata.create_all(bind=engine)
+    app.state.duckdb_client.is_connected()
+
+    try:
+        yield
+    finally:
+        logger.info("app_shutting_down")
+
 
 app = FastAPI(lifespan=lifespan)
 

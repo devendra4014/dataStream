@@ -25,8 +25,11 @@ class Settings:
         # Environment variables
         self.agent_env = os.getenv("AGENT_ENV", "development")
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        self.encryption_key = os.getenv("ENCRYPTION_KEY")
+        self.secrete_key = os.getenv("SECRET_KEY")
+        self.algorithm = os.getenv("ALGORITHM")
+        self.expiration_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
+        self.db_url = os.getenv("DB_URL", None)
 
         # Derived values
         self.debug = self.agent_env == "development"
